@@ -225,8 +225,10 @@ int main() {
                     cout << invalid_msg;
                     continue;
                 }
-                // Append directly to avoid creating a new string
-                get<string>(var->value) += addValue;
+                // Append with reserve for efficiency
+                string& currentStr = get<string>(var->value);
+                currentStr.reserve(currentStr.length() + addValue.length());
+                currentStr += addValue;
             }
         }
         else if (command == "Add") {
@@ -252,12 +254,19 @@ int main() {
                 resultVar->value = get<int>(value1Var->value) + get<int>(value2Var->value);
             }
             else {
-                // For strings, use move semantics if possible
+                // For strings, optimize concatenation
+                string& resultStr = get<string>(resultVar->value);
                 const string& s1 = get<string>(value1Var->value);
                 const string& s2 = get<string>(value2Var->value);
-                string result = s1 + s2;
-                resultVar->value = move(result);
+                resultStr.clear();
+                resultStr.reserve(s1.length() + s2.length());
+                resultStr = s1;
+                resultStr += s2;
             }
+        }
+        else if (!command.empty()) {
+            // Unknown command
+            cout << invalid_msg;
         }
     }
 
