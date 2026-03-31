@@ -225,10 +225,8 @@ int main() {
                     cout << invalid_msg;
                     continue;
                 }
-                // Append with reserve for efficiency
-                string& currentStr = get<string>(var->value);
-                currentStr.reserve(currentStr.length() + addValue.length());
-                currentStr += addValue;
+                // Append directly to avoid creating a new string
+                get<string>(var->value) += addValue;
             }
         }
         else if (command == "Add") {
@@ -251,22 +249,16 @@ int main() {
             }
 
             if (resultVar->type == "int") {
-                resultVar->value = get<int>(value1Var->value) + get<int>(value2Var->value);
+                int val1 = get<int>(value1Var->value);
+                int val2 = get<int>(value2Var->value);
+                resultVar->value = val1 + val2;
             }
             else {
-                // For strings, optimize concatenation
-                string& resultStr = get<string>(resultVar->value);
-                const string& s1 = get<string>(value1Var->value);
-                const string& s2 = get<string>(value2Var->value);
-                resultStr.clear();
-                resultStr.reserve(s1.length() + s2.length());
-                resultStr = s1;
-                resultStr += s2;
+                // For strings, read values first to handle case where result is same as operand
+                string s1 = get<string>(value1Var->value);
+                string s2 = get<string>(value2Var->value);
+                resultVar->value = s1 + s2;
             }
-        }
-        else if (!command.empty()) {
-            // Unknown command
-            cout << invalid_msg;
         }
     }
 
