@@ -233,6 +233,12 @@ int main() {
             string result, value1Name, value2Name;
             iss >> result >> value1Name >> value2Name;
 
+            // Validate that all names are provided and valid
+            if (result.empty() || value1Name.empty() || value2Name.empty()) {
+                cout << invalid_msg;
+                continue;
+            }
+
             Variable* resultVar = manager.findVariable(result);
             Variable* value1Var = manager.findVariable(value1Name);
             Variable* value2Var = manager.findVariable(value2Name);
@@ -255,9 +261,19 @@ int main() {
             }
             else {
                 // For strings, read values first to handle case where result is same as operand
-                string s1 = get<string>(value1Var->value);
-                string s2 = get<string>(value2Var->value);
-                resultVar->value = s1 + s2;
+                // Use move to avoid copying
+                if (resultVar == value1Var) {
+                    // result is value1, just append value2
+                    get<string>(resultVar->value) += get<string>(value2Var->value);
+                } else if (resultVar == value2Var) {
+                    // result is value2, prepend value1
+                    string temp = get<string>(value1Var->value);
+                    temp += get<string>(resultVar->value);
+                    resultVar->value = move(temp);
+                } else {
+                    // result is different from both, just concatenate
+                    resultVar->value = get<string>(value1Var->value) + get<string>(value2Var->value);
+                }
             }
         }
     }
